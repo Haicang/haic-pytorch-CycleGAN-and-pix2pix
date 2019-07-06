@@ -3,6 +3,7 @@ import caffe
 import argparse
 import numpy as np
 import scipy.misc
+import skimage.transform
 from PIL import Image
 from util import segrun, fast_hist, get_scores
 from cityscapes import cityscapes
@@ -44,7 +45,8 @@ def main():
         im_file = args.result_dir + '/' + idx + '_leftImg8bit.png'
         im = np.array(Image.open(im_file))
         # im = scipy.misc.imresize(im, (256, 256))
-        im = scipy.misc.imresize(im, (label.shape[1], label.shape[2]))
+        # im = scipy.misc.imresize(im, (label.shape[1], label.shape[2]))
+        im = skimage.transform.resize(im, (label.shape[1], label.shape[2]))
         out = segrun(net, CS.preprocess(im))
         hist_perframe += fast_hist(label.flatten(), out.flatten(), n_cl)
         if args.save_output_images > 0:
