@@ -24,9 +24,15 @@ from data import create_dataset
 from models import create_model
 from util.visualizer import Visualizer
 
+
+def assertions_on_opt(opt):
+    assert opt.n_critic > 0
+
+
 if __name__ == '__main__':
     opt = TrainOptions().parse()   # get training options
     dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
+    assertions_on_opt(opt)
     dataset_size = len(dataset)    # get the number of images in the dataset.
     print('The number of training images = %d' % dataset_size)
 
@@ -48,7 +54,12 @@ if __name__ == '__main__':
             total_iters += opt.batch_size
             epoch_iter += opt.batch_size
             model.set_input(data)         # unpack data from dataset and apply preprocessing
-            model.optimize_parameters()   # calculate loss functions, get gradients, update network weights
+
+            if opt.n_critic == 1:        # calculate loss functions, get gradients, update network weights
+                model.optimize_parameters()
+            else:
+                flag = ((total_iters // opt.batch_size) % opt.n_critic == 0)
+                model.optimize_parameters(flag)
 
             if total_iters % opt.display_freq == 0:   # display images on visdom and save images to a HTML file
                 save_result = total_iters % opt.update_html_freq == 0
